@@ -1,0 +1,54 @@
+#-----------------------------------------------------#
+#   _    ___  ___     ___ _  _____ ___ ___ _____ ___  #
+#  | |  / _ \/ __|___/ __| |/ / _ \_ _| _ \_   _/ __| #
+#  | |_| (_) \__ \___\__ \ ' <|   /| ||  _/ | | \__ \ #
+#  |____\___/|___/   |___/_|\_\_|_\___|_|   |_| |___/ #
+# 													  #
+#					Nome: LsBot						  #
+#					Versão: 1.0						  #
+#					Autor: yFlint					  #
+# 					Descrição: 						  #
+#			 - Skript de auto-resposta				  #
+#													  #
+#													  #
+#-----------------------------------------------------#
+
+import:
+	org.bukkit.Bukkit
+
+on load:
+	# Verify addons
+	set {_plugins} to "%Bukkit.getPluginManager().getPlugins()%"
+	if {_plugins} contains "skript-yaml" and "Skript-Reflect":
+		send "&6[LsBot] &aDependências encontradas (2): &fskript-yaml e Skript-Reflect" to console
+	else:
+		send "&6[LsBot] &cDependências não encontradas (2): &fskript-yaml e Skript-Reflect" to console
+		execute console command "sk disable %script name%.sk"
+
+	# Config
+	load yaml "plugins/LsBot/config.yml" as "lsbot_config"
+	load yaml "plugins/LsBot/messages.yml" as "lsbot_msgs"
+	if yaml "lsbot_config" is empty:
+		set yaml value "Main.Prefix" from "lsbot_config" to "&6&lBOT:"
+		set yaml value "Others.Sound" from "lsbot_config" to "LEVEL_UP"
+		set the comments of yaml node "Others" from "lsbot_config" to "Lista dos sons da 1.8: https://pastebin.com/23tfkqw4"
+		set yaml value "Bot.Questions.Qual é o site do servidor?" from "lsbot_config" to "&emeuserver.com"
+	if yaml "lsbot_msgs" is empty:
+		set yaml value "Messages.Not-a-question" from "lsbot_msgs" to "&cPegunta não encontrada no banco de dados."
+	save yaml "lsbot_config" and "lsbot_msgs"
+
+on chat:
+	if message starts with "!":
+		cancel event
+		set {_msg} to message
+		replace all "!" in {_msg} with ""
+		set {_prefix} to yaml value "Main.Prefix" from "lsbot_config"
+		if yaml value "Bot.Questions.%{_msg}%" from "lsbot_config" is set:
+			set {_answer} to yaml value "Bot.Questions.%{_msg}%" from "lsbot_config"
+			set {_sound} to (yaml value "Others.Sound" from "lsbot_config") parsed as sound
+			play sound "%{_sound}%" with volume 1 and pitch 1 at player for player
+			send "%{_prefix}% %{_answer}%"
+		else:
+			set {_error} to yaml value "Messages.Not-a-question" from "lsbot_msgs"
+			send "%{_prefix}% %{_error}%"
+                                                   
